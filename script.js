@@ -24,13 +24,15 @@ const CHAVE_STORAGE = 'lembretes';
 
 // Lê o array de lembretes salvo no localStorage (ou retorna [] se não houver nada)
 function carregarLembretesSalvos() {
-  const dados = localStorage.getItem(CHAVE_STORAGE);
-  // Se não existir nada salvo ainda, começamos com uma lista vazia
-  if (!dados) return [];
   try {
+    const dados = localStorage.getItem(CHAVE_STORAGE);
+    // Se não existir nada salvo ainda, começamos com uma lista vazia
+    if (!dados) return [];
     return JSON.parse(dados);
   } catch (erro) {
-    // Caso o conteúdo salvo esteja corrompido, ignora e começa do zero
+    // Caso o localStorage esteja bloqueado (ex: abrindo o arquivo direto
+    // no navegador via file://) ou o conteúdo salvo esteja corrompido,
+    // ignora o erro e começa com uma lista vazia em vez de travar o script
     console.error('Erro ao ler lembretes salvos:', erro);
     return [];
   }
@@ -38,7 +40,13 @@ function carregarLembretesSalvos() {
 
 // Salva o array de lembretes atual no localStorage como texto JSON
 function salvarLembretes(lembretes) {
-  localStorage.setItem(CHAVE_STORAGE, JSON.stringify(lembretes));
+  try {
+    localStorage.setItem(CHAVE_STORAGE, JSON.stringify(lembretes));
+  } catch (erro) {
+    // Mesmo raciocínio: se o localStorage não estiver disponível,
+    // não deixamos isso quebrar o restante da aplicação
+    console.error('Erro ao salvar lembretes:', erro);
+  }
 }
 
 // Array que mantém os lembretes em memória durante o uso da página
@@ -68,7 +76,8 @@ function adicionarLembrete() {
   const novoLembrete = {
     id: Date.now(), // id simples e único, baseado no timestamp
     texto,
-    prioridade
+    prioridade,
+    concluido: false // controla se o item já foi "conferido" (clicado)
   };
   lembretes.push(novoLembrete);
   salvarLembretes(lembretes);
@@ -94,7 +103,9 @@ function adicionarLembrete() {
 // com o texto do usuário, alguém poderia digitar código HTML/JS malicioso
 // ==========================================================
 function criarCardLembrete(lembrete) {
-  const { id, texto, prioridade } = lembrete;
+  // "?? false" garante que lembretes salvos antes dessa funcionalidade existir
+  // (sem o campo "concluido") também funcionem, assumindo que não estão conferidos
+  const { id, texto, prioridade, concluido = false } = lembrete;
 
   // Cria o elemento principal do card (div)
   const card = document.createElement('div');
@@ -106,6 +117,8 @@ function criarCardLembrete(lembrete) {
 
   // Div que agrupa o texto e a prioridade (conteúdo textual do card)
   const infoWrapper = document.createElement('div');
+  // Deixa claro visualmente que essa área é clicável (vira "mãozinha" no hover)
+  infoWrapper.classList.add('info-lembrete');
 
   // Parágrafo que vai conter o texto em negrito
   const paragrafo = document.createElement('p');
@@ -115,12 +128,36 @@ function criarCardLembrete(lembrete) {
   strong.textContent = texto;
   paragrafo.appendChild(strong);
 
+  // --- Emoji de "confere" (✅) ---
+  // Mostra que o item foi marcado como conferido/concluído
+  const emojiConfere = document.createElement('span');
+  emojiConfere.classList.add('emoji-confere');
+  emojiConfere.textContent = '✅';
+  // Começa escondido a menos que o lembrete já esteja marcado como concluído
+  emojiConfere.classList.toggle('oculto', !concluido);
+  paragrafo.appendChild(emojiConfere);
+
   // Elemento pequeno mostrando a prioridade em maiúsculas
   const pequeno = document.createElement('small');
   pequeno.textContent = `Prioridade: ${prioridade.toUpperCase()}`;
 
   // Junta o parágrafo e o "small" dentro do wrapper de informações
   infoWrapper.append(paragrafo, pequeno);
+
+  // --- Clique no texto do lembrete alterna o emoji de "confere" ---
+  // Fica só no infoWrapper (não no card inteiro) pra não conflitar
+  // com o clique no botão "Excluir"
+  infoWrapper.addEventListener('click', () => {
+    // Acha o lembrete correspondente no array em memória
+    const lembreteAtual = lembretes.find((item) => item.id === id);
+    if (!lembreteAtual) return;
+    // Inverte o estado de "concluido" (true vira false, false vira true)
+    lembreteAtual.concluido = !lembreteAtual.concluido;
+    // Mostra/esconde o emoji de acordo com o novo estado
+    emojiConfere.classList.toggle('oculto', !lembreteAtual.concluido);
+    // Persiste a mudança no localStorage
+    salvarLembretes(lembretes);
+  });
 
   // --- Botão de excluir ---
   const btnDeletar = document.createElement('button');

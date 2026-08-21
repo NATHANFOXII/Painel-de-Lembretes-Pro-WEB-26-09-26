@@ -97,6 +97,21 @@ button:hover {
 .card-item.media { border-left-color: #f59e0b; }
 .card-item.baixa { border-left-color: #10b981; }
 
+/* Área de texto do lembrete: indica que é clicável (marca/desmarca o ✅) */
+.info-lembrete {
+  cursor: pointer;
+}
+
+/* Emoji de "confere" (✅) exibido ao lado do texto quando o item está marcado */
+.emoji-confere {
+  margin-left: 0.4rem;
+}
+
+/* Classe usada para esconder o emoji quando o item NÃO está marcado */
+.oculto {
+  display: none;
+}
+
 .btn-deletar {
   background: #fee2e2;
   color: #ef4444;
