@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel de Lembretes</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <main class="container">
+    <h1>📌 Meus Lembretes</h1>
+
+    <!-- Formulário de Entrada -->
+    <div class="card-inputs">
+      <div class="form-group">
+        <label for="input-texto">Descrição do Lembrete:</label>
+        <input type="text" id="input-texto" placeholder="Ex: Comprar leite no mercado...">
+      </div>
+
+      <div class="form-group">
+        <label for="select-prioridade">Prioridade:</label>
+        <select id="select-prioridade">
+          <option value="baixa">Baixa</option>
+          <option value="media">Média</option>
+          <option value="alta">Alta</option>
+        </select>
+      </div>
+
+      <button id="btn-adicionar">Adicionar Lembrete</button>
+      <p id="msg-erro" class="erro"></p>
+    </div>
+
+    <!-- Container onde os cards serão gerados dinamicamente -->
+    <section id="lista-lembretes" class="grid-lembretes"></section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
